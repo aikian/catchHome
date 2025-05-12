@@ -52,9 +52,18 @@
   </div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzimlIxRRDyb9jVRjrDNzt_rppd4AcZH6E0-HkZU4a2mAi_fCb-s8rfZFHChSlgKHcF/exec";
-    const settingURL = "https://script.google.com/macros/s/AKfycbzimlIxRRDyb9jVRjrDNzt_rppd4AcZH6E0-HkZU4a2mAi_fCb-s8rfZFHChSlgKHcF/exec?func=getSettings"; 
+    const scriptURL = "https://script.google.com/macros/s/AKfycbwNIfxDvnsaR6csp8By2dFT7QT3xlbrJokIiJQC4U4/dev";
+const settingURL = "https://script.google.com/macros/s/AKfycbwNIfxDvnsaR6csp8By2dFT7QT3xlbrJokIiJQC4U4/dev?func=getSettings";
 
+fetch(scriptURL)
+  .then(res => res.json())
+  .then(data => {
+    console.log(data);  // 데이터를 콘솔에서 확인
+    document.getElementById("inviteTitle").innerText = data["제목"];
+    document.getElementById("inviteDateTime").innerText = `${data["날짜"]} 오후 ${data["시간"]}`;
+    document.getElementById("menuText").innerText = data["메뉴"];
+  })
+  .catch(error => console.error("Error:", error));
     function reserve() {
       const data = {
         mode: "reserve",
