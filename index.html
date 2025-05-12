@@ -1,0 +1,131 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>초대 예약</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; background: #f7f7f7; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 2em; border-radius: 10px; }
+    h1, h2, h3 { text-align: center; }
+    label { display: block; margin-top: 1em; }
+    input, button { width: 100%; padding: 0.7em; margin-top: 0.3em; border-radius: 5px; border: 1px solid #ccc; }
+    button { background: #4CAF50; color: white; font-weight: bold; cursor: pointer; margin-top: 1em; }
+    .secondary { background: #f44336; }
+    .banner, .menu, .share { background: #eef; padding: 1em; border-radius: 10px; margin-bottom: 1em; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="banner">
+      <h2 id="inviteTitle">초대장 제목 불러오는 중...</h2>
+      <p id="inviteDateTime">날짜/시간 로딩 중...</p>
+    </div>
+
+    <div class="menu">
+      <h3>오늘의 메뉴</h3>
+      <p id="menuText">메뉴 로딩 중...</p>
+    </div>
+
+    <p id="spotsLeft">남은 자리 확인 중...</p>
+
+    <label>이름</label>
+    <input type="text" id="name">
+
+    <label>연락처 (전화번호 또는 이메일)</label>
+    <input type="text" id="phone">
+
+    <label>비밀번호 (예약 확인/취소용)</label>
+    <input type="password" id="password">
+
+    <button onclick="reserve()">예약하기</button>
+    <button class="secondary" onclick="cancel()">예약 취소</button>
+
+    <div id="message"></div>
+
+    <div class="share">
+      <h3>초대장 공유하기</h3>
+      <button onclick="shareToKakao()">카카오톡</button>
+      <button onclick="shareToInstagram()">인스타 DM</button>
+      <button onclick="copyLink()">링크 복사</button>
+    </div>
+  </div>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzimlIxRRDyb9jVRjrDNzt_rppd4AcZH6E0-HkZU4a2mAi_fCb-s8rfZFHChSlgKHcF/exec";
+    const settingURL = "https://script.google.com/macros/s/AKfycbzimlIxRRDyb9jVRjrDNzt_rppd4AcZH6E0-HkZU4a2mAi_fCb-s8rfZFHChSlgKHcF/exec?func=getSettings"; 
+
+    function reserve() {
+      const data = {
+        mode: "reserve",
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value,
+        password: document.getElementById("password").value
+      };
+      fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      }).then(res => res.text()).then(msg => {
+        if (msg === "Success") {
+          document.getElementById("message").innerText = "예약 완료되었습니다!";
+        } else if (msg === "Full") {
+          document.getElementById("message").innerText = "예약이 모두 찼습니다.";
+        }
+        updateSpots();
+      });
+    }
+
+    function cancel() {
+      const data = {
+        mode: "cancel",
+        password: document.getElementById("password").value
+      };
+      fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      }).then(res => res.text()).then(msg => {
+        if (msg === "Cancelled") {
+          document.getElementById("message").innerText = "예약이 취소되었습니다.";
+        } else if (msg === "NotFound") {
+          document.getElementById("message").innerText = "비밀번호가 일치하지 않습니다.";
+        }
+        updateSpots();
+      });
+    }
+
+    function updateSpots() {
+      document.getElementById("spotsLeft").innerText = "남은 자리 수는 시트 기반으로 설정됩니다.";
+    }
+
+    function loadSettings() {
+      fetch(settingURL)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("inviteTitle").innerText = data["제목"];
+          document.getElementById("inviteDateTime").innerText = `${data["날짜"]} 오후 ${data["시간"]}`;
+          document.getElementById("menuText").innerText = data["메뉴"];
+        });
+    }
+
+    function shareToKakao() {
+      const message = `우리집 초대장이 도착했어요! ${window.location.href}`;
+      window.open(`https://share.kakao.com/?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(message)}`, '_blank');
+    }
+
+    function shareToInstagram() {
+      alert("인스타그램 DM은 웹 공유를 지원하지 않아서 직접 복사해 보내야 해요. 링크를 복사해 주세요!");
+    }
+
+    function copyLink() {
+      navigator.clipboard.writeText(window.location.href)
+        .then(() => alert("링크가 클립보드에 복사되었습니다!"))
+        .catch(() => alert("복사에 실패했습니다."));
+    }
+
+    updateSpots();
+    loadSettings();
+  </script>
+</body>
+</html>
